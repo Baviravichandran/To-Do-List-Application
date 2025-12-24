@@ -1,85 +1,111 @@
+// When page opens, load old tasks if available otherwise startswith emptylist 
+
 let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
 
-// save to local storage
+// Load task counter
+
+let taskCounter = Number(localStorage.getItem("taskCounter")) || 1;
+
+// Save tasks 
 
 function saveTasks() {
   localStorage.setItem("tasks", JSON.stringify(tasks));
+  localStorage.setItem("taskCounter", taskCounter);
 }
 
-//add task 
+// Adds a new task to the list, saves it, and updates the display
 function addTask() {
-  const taskInput = document.getElementById("taskInput");
-  const taskText = taskInput.value.trim();
+  let taskInput = document.getElementById("taskInput");
+  let taskText = taskInput.value.trim();
 
   if (taskText === "") {
-    alert("Please enter a new task");
+    alert("Please enter a task");
     return;
   }
 
   tasks.push({
+    id: taskCounter, 
     text: taskText,
     completed: false
   });
 
+  taskCounter++;        
   taskInput.value = "";
+
   saveTasks();
   renderTasks();
 }
 
-//complete 
+// Toggles the completed status of a task and updates the list
 
 function toggleComplete(id) {
-  tasks = tasks.map(task =>
-    task.id === id ? { task, completed: !task.completed } : task
-  );
+  for (let i = 0; i < tasks.length; i++) {
+    if (tasks[i].id === id) {
+      tasks[i].completed = !tasks[i].completed;
+      break;
+    }
+  }
   saveTasks();
   renderTasks();
 }
 
-//delete task
+// Removes the selected task and updates the list
 
 function deleteTask(id) {
-  tasks = tasks.filter(task => task.id !== id);
+  for (let i = 0; i < tasks.length; i++) {
+    if (tasks[i].id === id) {
+      tasks.splice(i, 1);
+      break;
+    }
+  }
   saveTasks();
   renderTasks();
 }
 
-// edit task 
+// Edits the selected task and updates the list
 
 function editTask(id) {
-  const task = tasks.find(t => t.id === id);
-  const newText = prompt("Edit task", task.text);
+  for (let i = 0; i < tasks.length; i++) {
+    if (tasks[i].id === id) {
+      let newText = prompt("Edit the task", tasks[i].text);
 
-  if (newText !== null && newText.trim() !== "") {
-    task.text = newText.trim();
-    saveTasks();
-    renderTasks();
+      if (newText !== null && newText.trim() !== "") {
+        tasks[i].text = newText.trim();
+      }
+      break;
+    }
   }
+  saveTasks();
+  renderTasks();
 }
 
-// show task
+// Displays all tasks with edit, delete, and complete options
 function renderTasks() {
-  const taskList = document.getElementById("taskList");
+  let taskList = document.getElementById("taskList");
   taskList.innerHTML = "";
 
-  tasks.forEach(task => {
-    const li = document.createElement("li");
+  for (let i = 0; i < tasks.length; i++) {
+    let task = tasks[i];
+    let li = document.createElement("li");
 
     li.innerHTML = `
       <div class="task-left">
-        <input type="checkbox" ${task.completed ? "checked" : ""} 
+        <input type="checkbox"
+          ${task.completed ? "checked" : ""}
           onclick="toggleComplete(${task.id})">
+
         <span class="${task.completed ? "completed" : ""}">
           ${task.text}
         </span>
       </div>
+
       <div class="actions">
         <span class="edit" onclick="editTask(${task.id})">Edit</span>
         <span class="delete" onclick="deleteTask(${task.id})">Delete</span>
-      </div> `;
+      </div>`;
 
     taskList.appendChild(li);
-  });
+  }
 }
 
 renderTasks();
